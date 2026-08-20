@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================
+   CODECRIME — NOCTURNE DETECTIVE DESIGN SYSTEM
+   ========================================== */
+
+/* === Base Styles === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #111319;
+  color: #e2e2ea;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #f5b942;
+  color: #12141A;
+}
+
+/* === Custom Scrollbar (IDE Feel) === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #33343b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #504535;
+}
+
+/* === Glass Panel (Glassmorphism) === */
+@layer components {
+  .glass-panel {
+    background: rgba(27, 36, 51, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-panel-solid {
+    background-color: #1B2433;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* === Investigation Layer === */
+  .investigation-layer {
+    background-color: #1B2433;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* === Terminal Block === */
+  .terminal-block {
+    background-color: #12141A;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px;
+  }
+
+  /* === Glow Hover Effect === */
+  .glow-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 15px rgba(245, 185, 66, 0.2);
+    border-color: rgba(245, 185, 66, 0.5);
+  }
+
+  /* === Background Grid Pattern === */
+  .bg-grid {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  .bg-grid-subtle {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  /* === Tech Border === */
+  .tech-border {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* === Timeline Line === */
+  .timeline-line {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    left: 15px;
+    top: 30px;
+    bottom: 0;
+  }
+
+  /* === Form Input Focus Glow === */
+  .form-input:focus {
+    box-shadow: inset 0 0 8px rgba(245, 185, 66, 0.2);
+  }
+
+  /* === Primary CTA Glow === */
+  .cta-glow {
+    box-shadow: 0 0 15px rgba(245, 185, 66, 0.3);
+  }
+
+  .cta-glow:hover {
+    box-shadow: 0 0 25px rgba(245, 185, 66, 0.4);
+  }
+}
+
+/* === Animations === */
+@keyframes stamp-in {
+  0% { opacity: 0; transform: scale(1.5) rotate(-10deg); }
+  50% { opacity: 1; transform: scale(0.9) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-stamp {
+  animation: stamp-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* === Material Symbols Base === */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* === Ambient Body Gradients (for resolution page) === */
+.bg-ambient {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(245, 185, 66, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(102, 250, 140, 0.05) 0%, transparent 50%);
+  background-color: #111319;
+  background-attachment: fixed;
+}
+
+/* === Syntax Highlighting === */
+.syntax-keyword { color: #f9bc45; }
+.syntax-string { color: #4ae176; }
+.syntax-punctuation { color: #d4c4af; }
+.syntax-variable { color: #bec7db; }
+.syntax-comment { color: #504535; }
+.syntax-error { color: #ffb4ab; }
