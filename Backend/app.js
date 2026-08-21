@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({
-    message: "CodeCrime Backend is Running 🚀"
+    message: "CodeCrime Backend is Running"
   });
 });
 
