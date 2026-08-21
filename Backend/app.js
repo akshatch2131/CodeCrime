@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 
+import testRoutes from "./routes/testRoutes.js";
+
 const app = express();
 
 app.use(cors());
@@ -11,5 +13,7 @@ app.get("/", (req, res) => {
     message: "CodeCrime Backend is Running"
   });
 });
+
+app.use("/api/test", testRoutes);
 
 export default app;
