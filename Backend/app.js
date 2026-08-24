@@ -1,7 +1,9 @@
 import express from "express";
+import caseRoutes from "./routes/caseRoutes.js";
 import cors from "cors";
 
 import testRoutes from "./routes/testRoutes.js";
+
 
 const app = express();
 
@@ -15,5 +17,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/test", testRoutes);
+app.use("/api/cases", caseRoutes);
 
 export default app;
