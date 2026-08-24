@@ -1,7 +1,7 @@
 import express from "express";
-import caseRoutes from "./routes/caseRoutes.js";
 import cors from "cors";
-
+import caseRoutes from "./routes/caseRoutes.js";
+import submissionRoutes from "./routes/submissionRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
 
 
@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/test", testRoutes);
+app.use("/api/submissions", submissionRoutes);
 app.use("/api/cases", caseRoutes);
 
 export default app;

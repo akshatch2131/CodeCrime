@@ -1,17 +1,115 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { supabase } from '../config/supabase';
 
 export default function InvestigationPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [caseData, setCaseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
   const [activePanel, setActivePanel] = useState(null);
+  const [activeFile, setActiveFile] = useState('workerA.go');
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null);
 
   const togglePanel = (panel) => {
-    setActivePanel((current) => (current === panel ? null : panel));
+    setActivePanel((current) =>
+      current === panel ? null : panel
+    );
   };
+  const handleSubmitFix = async () => {
+  try {
+    setSubmitting(true);
+    setSubmitResult(null);
+
+    // Get currently logged-in user
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      alert('Please login first.');
+      navigate('/login');
+      return;
+    }
+
+    // Code submitted to backend
+    const submittedCode = `
+package main
+
+import "sync"
+
+func workerA(lockA *sync.Mutex, lockB *sync.Mutex) {
+    lockA.Lock()
+    defer lockA.Unlock()
+
+    lockB.Lock()
+    defer lockB.Unlock()
+
+    println("Worker A finished")
+}
+
+func workerB(lockA *sync.Mutex, lockB *sync.Mutex) {
+    lockB.Lock()
+    defer lockB.Unlock()
+
+    lockA.Lock()
+    defer lockA.Unlock()
+
+    println("Worker B finished")
+}
+`;
+
+    const response = await fetch(
+      'http://localhost:5000/api/submissions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          case_id: id,
+          submitted_code: submittedCode,
+          explanation: 'Fixed the deadlock by correctly handling both locks.'
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Submission failed');
+    }
+
+    setSubmitResult(result);
+
+    // Move to resolution page after successful submission
+    setTimeout(() => {
+      navigate(`/resolution/${id}`, {
+        state: {
+          submissionResult: result
+        }
+      });
+    }, 1000);
+
+  } catch (error) {
+    console.error('Submission error:', error);
+
+    setSubmitResult({
+      success: false,
+      error: error.message
+    });
+
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   useEffect(() => {
     const fetchCase = async () => {
@@ -285,18 +383,20 @@ export default function InvestigationPage() {
                 </button>
 
 
-                <Link
-                  to={`/resolution/${id}`}
-                  className="px-md py-xs bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold rounded hover:bg-primary-fixed transition-colors flex items-center gap-xs cta-glow"
+                <button
+                  onClick={handleSubmitFix}
+                  disabled={submitting}
+                  className={`px-md py-xs bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold rounded hover:bg-primary-fixed transition-colors flex items-center gap-xs cta-glow ${
+                    submitting ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 >
-
                   <span className="material-symbols-outlined text-sm">
-                    gavel
+                    {submitting ? 'hourglass_top' : 'gavel'}
                   </span>
 
-                  Submit Fix
+                  {submitting ? 'Checking...' : 'Submit Fix'}
 
-                </Link>
+                </button>
 
               </div>
 
@@ -304,6 +404,20 @@ export default function InvestigationPage() {
 
           </header>
 
+          {/* ================= SUBMISSION RESULT ================= */}
+          {submitResult && (
+            <div
+              className={`absolute top-16 right-4 z-50 px-md py-sm rounded-lg border ${
+                submitResult.success
+                  ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                  : 'bg-error/10 border-error/30 text-error'
+              }`}
+            >
+              {submitResult.success
+                ? `Tests Passed: ${submitResult.result?.passed ?? 0}/${submitResult.result?.total ?? 0} • ${submitResult.result?.score ?? 0} XP`
+                : submitResult.error}
+            </div>
+          )}
 
           {/* ================= IDE AREA ================= */}
           <div className="flex-1 flex overflow-hidden">
@@ -345,47 +459,61 @@ export default function InvestigationPage() {
 
                 <div className="pl-lg flex flex-col gap-xs">
 
-                  {/* workerA.go */}
-                  <div className="flex items-center gap-xs py-1 text-on-surface cursor-pointer bg-surface-variant/50 rounded-sm">
+          {/* workerA.go */}
+<div
+  onClick={() => setActiveFile('workerA.go')}
+  className={`flex items-center gap-xs py-1 cursor-pointer rounded-sm ${
+    activeFile === 'workerA.go'
+      ? 'text-on-surface bg-surface-variant/50'
+      : 'text-on-surface-variant hover:text-on-surface'
+  }`}
+>
+  <span className="material-symbols-outlined text-sm text-primary">
+    code
+  </span>
 
-                    <span className="material-symbols-outlined text-sm text-primary">
-                      code
-                    </span>
-
-                    <span>
-                      workerA.go
-                    </span>
-
-                  </div>
+  <span>
+    workerA.go
+  </span>
+</div>
 
 
                   {/* workerB.go */}
-                  <div className="flex items-center gap-xs py-1 text-on-surface-variant cursor-pointer hover:text-on-surface">
+<div
+  onClick={() => setActiveFile('workerB.go')}
+  className={`flex items-center gap-xs py-1 cursor-pointer rounded-sm ${
+    activeFile === 'workerB.go'
+      ? 'text-on-surface bg-surface-variant/50'
+      : 'text-on-surface-variant hover:text-on-surface'
+  }`}
+>
+  <span className="material-symbols-outlined text-sm text-primary">
+    code
+  </span>
 
-                    <span className="material-symbols-outlined text-sm text-primary">
-                      code
-                    </span>
-
-                    <span>
-                      workerB.go
-                    </span>
-
-                  </div>
+  <span>
+    workerB.go
+  </span>
+</div>
 
 
                   {/* main.go */}
-                  <div className="flex items-center gap-xs py-1 text-on-surface-variant cursor-pointer hover:text-on-surface">
+<div
+  onClick={() => setActiveFile('main.go')}
+  className={`flex items-center gap-xs py-1 cursor-pointer rounded-sm ${
+    activeFile === 'main.go'
+      ? 'text-on-surface bg-surface-variant/50'
+      : 'text-on-surface-variant hover:text-on-surface'
+  }`}
+>
+  <span className="material-symbols-outlined text-sm text-secondary">
+    description
+  </span>
 
-                    <span className="material-symbols-outlined text-sm text-secondary">
-                      description
-                    </span>
-
-                    <span>
-                      main.go
-                    </span>
-
-                  </div>
-
+  <span>
+    main.go
+  </span>
+</div>
                 </div>
 
               </div>
@@ -437,110 +565,215 @@ export default function InvestigationPage() {
                   {/* Line Numbers */}
                   <div className="flex flex-col text-on-surface-variant/50 pr-md select-none text-right w-10 border-r border-white/5 mr-md">
 
-                    {Array.from({ length: 15 }, (_, i) => (
-                      <span key={i}>
-                        {i + 1}
-                      </span>
-                    ))}
+                    {Array.from(
+  {
+    length:
+      activeFile === 'workerA.go'
+        ? 15
+        : activeFile === 'workerB.go'
+          ? 15
+          : 17,
+  },
+  (_, i) => (
+    <span key={i}>{i + 1}</span>
+  )
+)}
 
                   </div>
 
 
                   {/* Go Code */}
-                  <div className="flex-1 text-on-surface whitespace-pre">
+<div className="flex-1 text-on-surface whitespace-pre">
 
-                    <span className="text-secondary">
-                      package
-                    </span>
-                    {' main\n'}
+  {/* workerA.go */}
+  {activeFile === 'workerA.go' && (
+    <>
+      <span className="text-secondary">package</span>{' main\n'}
+      {'\n'}
 
-                    {'\n'}
+      <span className="text-secondary">import</span>{' '}
+      <span className="text-tertiary">"sync"</span>
+      {'\n\n'}
 
-                    <span className="text-secondary">
-                      import
-                    </span>
-                    {' '}
-                    <span className="text-tertiary">
-                      "sync"
-                    </span>
+      <span className="text-secondary">func</span>{' '}
+      <span className="text-primary-container">workerA</span>
+      {'(lockA *sync.Mutex, lockB *sync.Mutex) {\n'}
 
-                    {'\n\n'}
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Worker A takes Lock A'}
+      </span>
+      {'\n'}
 
-                    <span className="text-secondary">
-                      func
-                    </span>
-                    {' '}
-                    <span className="text-primary-container">
-                      workerA
-                    </span>
-                    {'(lockA *sync.Mutex, lockB *sync.Mutex) {\n'}
+      {'    '}
+      <span className="text-on-surface">
+        lockA.Lock()
+      </span>
+      {'\n'}
 
-                    {'    '}
-                    <span className="text-on-surface-variant/50 italic">
-                      {'// Worker A takes Lock A'}
-                    </span>
+      {'    '}
+      <span className="text-on-surface">
+        defer lockA.Unlock()
+      </span>
+      {'\n\n'}
 
-                    {'\n'}
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Worker A now waits for Lock B'}
+      </span>
+      {'\n'}
 
-                    {'    '}
-                    <span className="text-on-surface">
-                      lockA.Lock()
-                    </span>
+      {'    '}
+      <span className="text-error">
+        lockB.Lock()
+      </span>
+      {'\n'}
 
-                    {'\n'}
+      {'    '}
+      <span className="text-on-surface">
+        defer lockB.Unlock()
+      </span>
+      {'\n\n'}
 
-                    {'    '}
-                    <span className="text-on-surface">
-                      defer lockA.Unlock()
-                    </span>
+      {'    '}
+      <span className="text-secondary">println</span>
+      {'('}
+      <span className="text-tertiary">
+        "Worker A finished"
+      </span>
+      {')\n'}
 
-                    {'\n\n'}
+      {'}'}
+    </>
+  )}
 
-                    {'    '}
-                    <span className="text-on-surface-variant/50 italic">
-                      {'// Worker A now waits for Lock B'}
-                    </span>
 
-                    {'\n'}
+  {/* workerB.go */}
+  {activeFile === 'workerB.go' && (
+    <>
+      <span className="text-secondary">package</span>{' main\n'}
+      {'\n'}
 
-                    {'    '}
-                    <span className="text-error">
-                      lockB.Lock()
-                    </span>
+      <span className="text-secondary">import</span>{' '}
+      <span className="text-tertiary">"sync"</span>
+      {'\n\n'}
 
-                    {'\n'}
+      <span className="text-secondary">func</span>{' '}
+      <span className="text-primary-container">workerB</span>
+      {'(lockA *sync.Mutex, lockB *sync.Mutex) {\n'}
 
-                    {'    '}
-                    <span className="text-on-surface">
-                      defer lockB.Unlock()
-                    </span>
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Worker B takes Lock B'}
+      </span>
+      {'\n'}
 
-                    {'\n\n'}
+      {'    '}
+      <span className="text-error">
+        lockB.Lock()
+      </span>
+      {'\n'}
 
-                    {'    '}
-                    <span className="text-secondary">
-                      println
-                    </span>
+      {'    '}
+      <span className="text-on-surface">
+        defer lockB.Unlock()
+      </span>
+      {'\n\n'}
 
-                    {'('}
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Worker B now waits for Lock A'}
+      </span>
+      {'\n'}
 
-                    <span className="text-tertiary">
-                      "Worker A finished"
-                    </span>
+      {'    '}
+      <span className="text-error">
+        lockA.Lock()
+      </span>
+      {'\n'}
 
-                    {')\n'}
+      {'    '}
+      <span className="text-on-surface">
+        defer lockA.Unlock()
+      </span>
+      {'\n\n'}
 
-                    {'}'}
+      {'    '}
+      <span className="text-secondary">println</span>
+      {'('}
+      <span className="text-tertiary">
+        "Worker B finished"
+      </span>
+      {')\n'}
 
-                  </div>
+      {'}'}
+    </>
+  )}
+
+
+  {/* main.go */}
+  {activeFile === 'main.go' && (
+    <>
+      <span className="text-secondary">package</span>{' main\n'}
+      {'\n'}
+
+      <span className="text-secondary">import</span>{' '}
+      <span className="text-tertiary">"sync"</span>
+      {'\n\n'}
+
+      <span className="text-secondary">func</span>{' '}
+      <span className="text-primary-container">main</span>
+      {'() {\n'}
+
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Create two locks'}
+      </span>
+      {'\n'}
+
+      {'    '}
+      <span className="text-secondary">var</span>
+      {' lockA sync.Mutex\n'}
+
+      {'    '}
+      <span className="text-secondary">var</span>
+      {' lockB sync.Mutex\n\n'}
+
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Start both workers'}
+      </span>
+      {'\n'}
+
+      {'    '}
+      <span className="text-secondary">go</span>
+      {' workerA(&lockA, &lockB)\n'}
+
+      {'    '}
+      <span className="text-secondary">go</span>
+      {' workerB(&lockA, &lockB)\n\n'}
+
+      {'    '}
+      <span className="text-on-surface-variant/50 italic">
+        {'// Keep the program running'}
+      </span>
+      {'\n'}
+
+      {'    '}
+      <span className="text-secondary">select</span>
+      {' {}\n'}
+
+      {'}'}
+    </>
+  )}
+
+</div>
 
                 </div>
 
 
-                {/* Error Highlight */}
-                <div className="absolute top-56 left-16 right-md h-6 border border-error/30 bg-error/5 pointer-events-none rounded-sm"></div>
-
-              </div>
+                
+</div>
 
             </div>
 
