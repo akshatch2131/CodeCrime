@@ -1,16 +1,172 @@
-# React + Vite
+# 🔎 CodeCrime – Debug Like a Detective
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> An AI-powered gamified debugging learning platform where developers investigate and solve realistic software bugs like detectives.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📌 About the Project
 
-## React Compiler
+**CodeCrime** is a gamified debugging platform designed to help students and developers improve their real-world debugging skills.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Unlike traditional coding platforms that mainly focus on solving programming problems, CodeCrime provides realistic debugging scenarios where users investigate:
 
-## Expanding the Oxlint configuration
+- 🐛 Source Code
+- 📜 Application Logs
+- 🗄️ Database States
+- 🔗 API Traces
+- 🤖 AI-generated Hints
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The user analyzes the evidence, identifies the root cause of the bug, and submits a diagnosis.
+
+The platform uses a detective-style approach to make debugging more interactive, practical, and engaging.
+
+---
+
+## 🎯 Project Objective
+
+The main objective of CodeCrime is to provide a practical environment for learning debugging skills through realistic software bug investigations.
+
+The platform aims to:
+
+- Improve debugging and problem-solving skills
+- Provide realistic debugging scenarios
+- Teach developers how to analyze logs and API traces
+- Help users understand database-related issues
+- Provide AI-assisted debugging hints
+- Make debugging more engaging through gamification
+- Track user progress using XP, scores, and leaderboards
+
+---
+
+## 🚀 Key Features
+
+### 🔐 Authentication
+- User Registration
+- User Login
+- JWT-based Authentication
+- Secure Password Hashing
+
+### 📊 Dashboard
+- User statistics
+- XP
+- Progress
+- Solved cases
+- Current streak
+- Recent activity
+
+### 🗂️ Case Repository
+Users can browse different debugging cases based on difficulty.
+
+### 📋 Case Briefing
+Each case provides information about the software issue and investigation objective.
+
+### 🕵️ Investigation Interface
+Users investigate bugs using multiple sources of evidence:
+
+- Source Code
+- Logs
+- Database State
+- API Traces
+
+### 💻 Code Editor
+A Monaco-based code editor is used to provide a professional coding environment similar to modern development tools.
+
+### 🤖 AI Hint System
+The AI assistant provides contextual hints to help users investigate the bug without directly revealing the answer.
+
+### 📝 Bug Diagnosis
+Users submit their diagnosis after investigating the case.
+
+### 🏆 Gamification
+The platform includes:
+
+- XP
+- Scores
+- Leaderboards
+- Achievements
+- Progress Tracking
+- Streaks
+
+### 👤 Detective Profile
+Users can view:
+
+- Solved Cases
+- XP
+- Rank
+- Achievements
+- Progress
+
+### 🛠️ Admin Panel
+Admins can manage:
+
+- Debugging Cases
+- Users
+- Case Difficulty
+- Case Data
+
+---
+
+# 🧑‍💻 Technology Stack
+
+## Frontend
+
+- React.js
+- Vite
+- Tailwind CSS
+- React Router
+- React Query
+- Monaco Editor
+- Recharts
+
+## Backend
+
+- Node.js
+- Express.js
+
+## Database
+
+- MongoDB
+- Mongoose
+
+## Authentication
+
+- JWT
+- bcrypt
+
+## AI
+
+- Gemini API
+
+## Deployment
+
+- Vercel – Frontend
+- Render – Backend
+- MongoDB Atlas – Database
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                    ┌──────────────────┐
+                    │      User        │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │  React Frontend  │
+                    │      + Vite      │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ Express Backend  │
+                    │     REST API     │
+                    └──────┬─────┬─────┘
+                           │     │
+              ┌────────────┘     └─────────────┐
+              ▼                                ▼
+      ┌──────────────────┐             ┌──────────────────┐
+      │     MongoDB      │             │   Gemini AI API  │
+      │     Database     │             │   Hint System    │
+      └──────────────────┘             └──────────────────┘
