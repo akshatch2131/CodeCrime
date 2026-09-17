@@ -1,118 +1,282 @@
 import supabase from "../config/supabase.js";
+import { runTestCases } from "../services/codeRunner.js";
 
+// Submit solution and run test cases
 export const submitSolution = async (req, res) => {
   try {
-    const {
-      user_id,
-      case_id,
-      submitted_code,
-      explanation
-    } = req.body || {};
+    const userId = req.user.id;
+    const problem_id = req.body.problem_id || req.body.problemId;
+    const submitted_code = req.body.submitted_code || req.body.code;
+    const time_taken = req.body.time_taken || req.body.timeTaken || 0;
+    const hints_used = req.body.hints_used || req.body.hintsUsed || 0;
 
-    // Check required data
-    if (!user_id || !case_id || !submitted_code) {
+    if (!problem_id || !submitted_code) {
       return res.status(400).json({
         success: false,
-        error: "user_id, case_id and submitted_code are required"
+        error: "problem_id (or problemId) and submitted_code (or code) are required",
       });
     }
 
-    // Get test cases for this case
-    const { data: tests, error: testError } = await supabase
-      .from("case_test_cases")
+    // Fetch the problem with test cases
+    const { data: problem, error: problemError } = await supabase
+      .from("problems")
       .select("*")
-      .eq("case_id", case_id);
+      .eq("id", problem_id)
+      .single();
 
-    if (testError) {
-      console.error("Test case error:", testError);
-
-      return res.status(500).json({
-        success: false,
-        error: testError.message
-      });
-    }
-
-    if (!tests || tests.length === 0) {
+    if (problemError || !problem) {
       return res.status(404).json({
         success: false,
-        error: "No test cases found for this case"
+        error: "Problem not found",
       });
     }
 
-    // Simple checker for Case #142
-    const fixed =
-      submitted_code.includes("lockA.Lock()") &&
-      submitted_code.includes("defer lockA.Unlock()") &&
-      submitted_code.includes("lockB.Lock()") &&
-      submitted_code.includes("defer lockB.Unlock()");
-
-    // Count passed tests
-    const testsTotal = tests.length;
-    const testsPassed = fixed ? testsTotal : 0;
+    // Run user code against test cases
+    const testCases = problem.test_cases || [];
+    const functionName = problem.function_name || "solution";
+    const { results, passed, total } = runTestCases(submitted_code, testCases, functionName);
 
     // Calculate score
-    const baseScore = Math.round(
-      (testsPassed / testsTotal) * 900
-    );
+    const baseScore = problem.xp_reward || 100;
+    const passRatio = total > 0 ? passed / total : 0;
+    const rawScore = Math.round(baseScore * passRatio);
 
-    const finalScore = baseScore;
+    // Time penalty: lose 1 point per 30 seconds over estimated time
+    const estimatedSeconds = (problem.estimated_time || 10) * 60;
+    const timePenalty = time_taken > estimatedSeconds
+      ? Math.min(Math.floor((time_taken - estimatedSeconds) / 30), Math.round(rawScore * 0.3))
+      : 0;
 
-    const status =
-      testsPassed === testsTotal
-        ? "passed"
-        : "failed";
+    // Hint penalty
+    const hintPenalty = (hints_used || 0) * 5;
 
-    console.log("Submission result:", {
-      testsPassed,
-      testsTotal,
-      baseScore,
-      finalScore,
-      status
-    });
+    // Bonus for no hints
+    const noHintBonus = (hints_used || 0) === 0 && passRatio === 1 ? 10 : 0;
+
+    const finalScore = Math.max(0, rawScore - timePenalty - hintPenalty + noHintBonus);
+    const status = passed === total ? "passed" : "failed";
 
     // Save submission
-    const { error: submissionError } = await supabase
+    const { data: submission, error: subError } = await supabase
       .from("submissions")
       .insert([
         {
-          user_id: user_id,
-          case_id: case_id,
-          submitted_code: submitted_code,
-          explanation: explanation || "",
-          tests_passed: testsPassed,
-          tests_total: testsTotal,
-          base_score: baseScore,
-          final_score: finalScore,
-          status: status
-        }
-      ]);
+          user_id: userId,
+          problem_id,
+          submitted_code,
+          tests_passed: passed,
+          tests_total: total,
+          time_taken: time_taken || 0,
+          hints_used: hints_used || 0,
+          score: finalScore,
+          status,
+        },
+      ])
+      .select()
+      .single();
 
-    if (submissionError) {
-      console.error("Submission error:", submissionError);
-
+    if (subError) {
+      console.error("Submission save error:", subError);
       return res.status(500).json({
         success: false,
-        error: submissionError.message
+        error: "Failed to save submission",
       });
     }
 
-    // Send result back
+    // If all tests passed, update user profile
+    if (status === "passed") {
+      // Check if this is the first time solving this problem
+      const { data: prevSubmissions } = await supabase
+        .from("submissions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("problem_id", problem_id)
+        .eq("status", "passed")
+        .neq("id", submission.id);
+
+      const isFirstSolve = !prevSubmissions || prevSubmissions.length === 0;
+
+      if (isFirstSolve) {
+        // Fetch current profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("xp, problems_solved, streak")
+          .eq("id", userId)
+          .single();
+
+        if (profile) {
+          const newXp = (profile.xp || 0) + finalScore;
+          const newSolved = (profile.problems_solved || 0) + 1;
+          const newStreak = (profile.streak || 0) + 1;
+
+          // Determine level based on XP
+          let level = "Rookie";
+          if (newXp >= 5000) level = "Expert";
+          else if (newXp >= 2000) level = "Debugger";
+          else if (newXp >= 500) level = "Developer";
+          else if (newXp >= 100) level = "Coder";
+
+          await supabase
+            .from("profiles")
+            .update({
+              xp: newXp,
+              problems_solved: newSolved,
+              streak: newStreak,
+              level,
+            })
+            .eq("id", userId);
+        }
+      }
+    }
+
     return res.json({
       success: true,
+      submission: {
+        ...submission,
+        passed_tests: passed,
+        total_tests: total,
+      },
       result: {
-        passed: testsPassed,
-        total: testsTotal,
+        submission_id: submission.id,
+        passed,
+        total,
         score: finalScore,
-        status: status
-      }
+        status,
+        time_taken: time_taken || 0,
+        hints_used: hints_used || 0,
+        test_results: results,
+      },
     });
-
   } catch (error) {
-    console.error("Server error:", error);
-
+    console.error("Submit error:", error);
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+    });
+  }
+};
+
+// Run code without submitting (for "Run Code" button)
+export const runCode = async (req, res) => {
+  try {
+    const problem_id = req.body.problem_id || req.body.problemId;
+    const code = req.body.code || req.body.submitted_code;
+
+    if (!problem_id || !code) {
+      return res.status(400).json({
+        success: false,
+        error: "problem_id (or problemId) and code are required",
+      });
+    }
+
+    // Fetch the problem
+    const { data: problem, error: problemError } = await supabase
+      .from("problems")
+      .select("test_cases, function_name")
+      .eq("id", problem_id)
+      .single();
+
+    if (problemError || !problem) {
+      return res.status(404).json({
+        success: false,
+        error: "Problem not found",
+      });
+    }
+
+    const testCases = problem.test_cases || [];
+    const functionName = problem.function_name || "solution";
+    const { results, passed, total } = runTestCases(code, testCases, functionName);
+
+    return res.json({
+      success: true,
+      results,
+      passed,
+      total,
+    });
+  } catch (error) {
+    console.error("Run code error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Get user's submissions
+export const getMySubmissions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("*, problems(title, difficulty, category)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    const submissions = (data || []).map((s) => ({
+      ...s,
+      passed_tests: s.tests_passed,
+      total_tests: s.tests_total,
+      code: s.submitted_code,
+    }));
+
+    return res.json({
+      success: true,
+      submissions,
+    });
+  } catch (error) {
+    console.error("Get submissions error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+};
+
+// Get submission by ID
+export const getSubmissionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("*, problems(title, difficulty, category, xp_reward)")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({
+        success: false,
+        error: "Submission not found",
+      });
+    }
+
+    const submission = {
+      ...data,
+      passed_tests: data.tests_passed,
+      total_tests: data.tests_total,
+      code: data.submitted_code,
+    };
+
+    return res.json({
+      success: true,
+      submission,
+    });
+  } catch (error) {
+    console.error("Get submission error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
     });
   }
 };

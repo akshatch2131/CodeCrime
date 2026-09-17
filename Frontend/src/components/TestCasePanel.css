@@ -1,0 +1,139 @@
+.test-case-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-surface-container-highest);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 100%;
+}
+
+.tcp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface-container);
+  border-bottom: 1px solid var(--color-surface-container-highest);
+  padding: 0 var(--space-md);
+}
+
+.tcp-tabs {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.tcp-tab {
+  background: transparent;
+  border: none;
+  color: var(--color-on-surface-variant);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tcp-tab:hover {
+  color: var(--color-on-surface);
+}
+
+.tcp-tab.active {
+  color: var(--color-primary-container);
+  border-bottom-color: var(--color-primary-container);
+}
+
+.tcp-content {
+  flex: 1;
+  padding: var(--space-md);
+  overflow-y: auto;
+}
+
+/* Test Cases view */
+.case-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.case-btn {
+  background: var(--color-surface-container);
+  border: 1px solid var(--color-surface-container-highest);
+  color: var(--color-on-surface-variant);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.case-btn.active {
+  background: var(--color-surface-container-high);
+  border-color: var(--color-primary-container);
+  color: var(--color-on-surface);
+}
+
+.case-btn.passed {
+  border-color: rgba(102, 250, 140, 0.4);
+  color: var(--color-tertiary);
+}
+
+.case-btn.failed {
+  border-color: rgba(255, 180, 171, 0.4);
+  color: var(--color-error);
+}
+
+.case-io-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.case-io-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.case-io-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-on-surface-variant);
+  font-weight: 600;
+}
+
+.case-io-box {
+  background: #0d1117;
+  border: 1px solid var(--color-surface-container-highest);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: #e6edf3;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Terminal / Output View */
+.terminal-output {
+  background: #0d1117;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: #e6edf3;
+  min-height: 120px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.terminal-output.error {
+  color: #ffb4ab;
+}

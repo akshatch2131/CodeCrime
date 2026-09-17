@@ -1,0 +1,202 @@
+.workspace-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  overflow: hidden;
+}
+
+/* Workspace Top Navigation Bar */
+.workspace-navbar {
+  height: 52px;
+  background: var(--color-surface-container);
+  border-bottom: 1px solid var(--color-surface-container-highest);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-md);
+  flex-shrink: 0;
+}
+
+.workspace-nav-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.workspace-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-on-surface-variant);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.workspace-back-btn:hover {
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+}
+
+.workspace-problem-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.workspace-nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-container-high);
+  border: 1px solid var(--color-surface-container-highest);
+  color: var(--color-on-surface);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-run:hover:not(:disabled) {
+  background: var(--color-surface-container-highest);
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-primary-container);
+  border: none;
+  color: #111319;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.btn-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 185, 66, 0.15);
+  border: 1px solid rgba(245, 185, 66, 0.35);
+  color: var(--color-primary-container);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-hint:hover {
+  background: rgba(245, 185, 66, 0.25);
+}
+
+/* Main Split Layout */
+.workspace-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left Pane: Description & Briefing */
+.workspace-left-pane {
+  width: 38%;
+  min-width: 320px;
+  max-width: 500px;
+  background: var(--color-surface-container-low);
+  border-right: 1px solid var(--color-surface-container-highest);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  gap: var(--space-lg);
+}
+
+.workspace-desc-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+}
+
+.workspace-desc-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.workspace-desc-content {
+  font-size: 14px;
+  color: var(--color-on-surface-variant);
+  line-height: 1.6;
+}
+
+.workspace-desc-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin: var(--space-md) 0 var(--space-xs) 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Right Pane: Code Editor + Test Cases */
+.workspace-right-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #111319;
+}
+
+.workspace-editor-section {
+  flex: 1.2;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--space-sm) var(--space-sm) 0 var(--space-sm);
+}
+
+.workspace-tests-section {
+  flex: 0.8;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--space-sm);
+}
+
+@media (max-width: 900px) {
+  .workspace-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .workspace-left-pane {
+    width: 100%;
+    max-width: 100%;
+    min-height: 250px;
+  }
+}

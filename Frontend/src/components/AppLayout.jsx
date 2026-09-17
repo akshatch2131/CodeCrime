@@ -1,14 +1,15 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import './AppLayout.css';
 
 export default function AppLayout() {
   return (
-    <div className="flex h-screen overflow-hidden font-body-md text-body-md">
+    <div className="app-layout">
       <Sidebar />
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-background relative">
+      <main className="app-main">
         <TopBar />
-        <div className="flex-1 overflow-y-auto p-xl scroll-smooth">
+        <div className="app-content">
           <Outlet />
         </div>
       </main>

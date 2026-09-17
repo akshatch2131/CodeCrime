@@ -1,313 +1,110 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../config/supabase';
+import { useAuth } from '../context/AuthContext';
+import './Auth.css';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-
-  // Login form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // UI states
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // Handle login
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Clear previous error
     setError('');
-
-    // Basic validation
-    if (!email || !password) {
-      setError('Please enter your email and password.');
-      return;
-    }
-
+    if (!email || !password) { setError('Please enter your email and password.'); return; }
     setLoading(true);
-
     try {
-      // Login using Supabase Authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      // If Supabase returns an error
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
-      // Login successful
-      console.log('Logged in user:', data.user);
-
-      // Go to dashboard
+      await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Something went wrong. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row overflow-hidden font-body-md text-body-md">
-
-      {/* Left Side: Dark Panel */}
-      <div className="hidden md:flex md:w-1/2 bg-surface-container-low border-r border-white/10 flex-col justify-center items-start p-xl relative overflow-hidden">
-
-        {/* Background Grid overlay */}
-        <div className="absolute inset-0 bg-grid opacity-50 z-0"></div>
-
-        {/* Glow Effect */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[100px] z-0 pointer-events-none"></div>
-
-        <div className="z-10 w-full max-w-md mx-auto">
-
-          <h1 className="font-headline-lg text-headline-lg text-primary mb-lg tracking-tight">
-            Crack every case. Debug every mystery.
-          </h1>
-
-          <p className="font-body-lg text-body-lg text-on-surface-variant mb-xl leading-relaxed">
-            Access your specialized investigation terminal. Review critical bugs,
-            analyze code blocks, and close out open leads. The truth is in the code.
+    <div className="auth-page">
+      {/* Left Panel */}
+      <div className="auth-left">
+        <div className="auth-left-grid bg-grid"></div>
+        <div className="auth-left-glow"></div>
+        <div className="auth-left-content">
+          <h1 className="auth-left-title">Debug like a detective. Code like a pro.</h1>
+          <p className="auth-left-desc">
+            Access your debugging workspace. Analyze buggy JavaScript code, fix errors, and verify your solutions with test cases.
           </p>
-
-          {/* Code snippet decoration */}
-          <div className="bg-surface border border-white/10 rounded-lg p-md font-code-sm text-code-sm text-on-surface-variant w-full relative overflow-hidden">
-
-            <div className="flex items-center gap-2 mb-sm border-b border-white/10 pb-sm">
-              <span className="w-3 h-3 rounded-full bg-error/50"></span>
-              <span className="w-3 h-3 rounded-full bg-surface-tint/50"></span>
-              <span className="w-3 h-3 rounded-full bg-tertiary/50"></span>
-
-              <span className="ml-2 text-on-secondary-container opacity-70">
-                terminal.js
-              </span>
+          <div className="auth-code-block">
+            <div className="auth-code-header">
+              <div className="auth-code-dot red"></div>
+              <div className="auth-code-dot yellow"></div>
+              <div className="auth-code-dot green"></div>
+              <span className="auth-code-filename">buggy_code.js</span>
             </div>
-
-            <pre className="overflow-x-auto">
-              <code>
-                <span className="text-primary-container">function</span>{' '}
-                <span className="text-tertiary-container">analyzeLead</span>
-                (evidence) {'{\n'}
-
-                {'  '}
-                <span className="text-primary-container">if</span>{' '}
-                (!evidence){' '}
-
-                <span className="text-primary-container">
-                  throw new
-                </span>{' '}
-
-                <span className="text-error">Error</span>
-                (<span className="text-surface-tint">
-                  'No clue found'
-                </span>
-                );{'\n'}
-
-                {'  '}
-                <span className="text-on-surface-variant opacity-50">
-                  {'// Initiating deep scan...'}
-                </span>
-                {'\n'}
-
-                {'  '}
-                <span className="text-primary-container">return</span>{' '}
-                evidence.
-
-                <span className="text-tertiary-container">
-                  resolve
-                </span>
-                ();{'\n'}
-
-                {'}'}
-              </code>
-            </pre>
-
+            <div className="auth-code-body">
+              <pre><code>{`function calculateSum(arr) {
+  let sum = 0;
+  for (let i = 0; i <= arr.length; i++) {
+    sum += arr[i]; // Bug: off-by-one
+  }
+  return sum;
+}`}</code></pre>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right Side: Login Form */}
-      <div className="w-full md:w-1/2 bg-surface-container flex items-center justify-center p-lg relative">
-
-        <div className="w-full max-w-sm">
-
-          {/* Header */}
-          <div className="mb-xl text-center md:text-left">
-
-            <span className="material-symbols-outlined text-primary text-4xl mb-sm inline-block">
-              terminal
-            </span>
-
-            <h2 className="font-headline-md text-headline-md text-on-background mb-xs">
-              Welcome back, Detective
-            </h2>
-
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Enter your credentials to access the system.
-            </p>
-
+      {/* Right Panel — Login Form */}
+      <div className="auth-right">
+        <div className="auth-form-wrapper">
+          <div className="auth-form-header">
+            <span className="material-symbols-outlined auth-form-icon">terminal</span>
+            <h2 className="auth-form-title">Welcome back, Developer</h2>
+            <p className="auth-form-subtitle">Enter your credentials to access the platform.</p>
           </div>
 
-          {/* Login Form */}
-          <form className="space-y-md" onSubmit={handleSubmit}>
-
-            {/* Email */}
-            <div>
-
-              <label
-                className="block font-label-caps text-label-caps text-on-surface-variant mb-xs"
-                htmlFor="email"
-              >
-                Email Address
-              </label>
-
-              <div className="relative">
-
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50">
-                  mail
-                </span>
-
-                <input
-                  className="w-full bg-background border border-white/10 rounded py-sm pl-10 pr-md font-body-md text-on-background focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none transition-colors"
-                  id="email"
-                  placeholder="detective@codecrime.com"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="email">Email Address</label>
+              <div className="auth-input-wrapper">
+                <span className="material-symbols-outlined auth-input-icon">mail</span>
+                <input className="auth-input" id="email" placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-
-              <label
-                className="block font-label-caps text-label-caps text-on-surface-variant mb-xs flex justify-between"
-                htmlFor="password"
-              >
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="password">
                 <span>Password</span>
-
-                <a className="text-primary-container hover:underline cursor-pointer">
-                  Forgot?
-                </a>
+                <a>Forgot?</a>
               </label>
-
-              <div className="relative">
-
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50">
-                  lock
-                </span>
-
-                <input
-                  className="w-full bg-background border border-white/10 rounded py-sm pl-10 pr-10 font-body-md text-on-background focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none transition-colors"
-                  id="password"
-                  placeholder="••••••••"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-
-                <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-background transition-colors"
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  <span className="material-symbols-outlined">
-                    {showPassword ? 'visibility_off' : 'visibility'}
-                  </span>
+              <div className="auth-input-wrapper">
+                <span className="material-symbols-outlined auth-input-icon">lock</span>
+                <input className="auth-input" id="password" placeholder="••••••••" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
+                <button className="auth-toggle-password" type="button" onClick={() => setShowPassword(!showPassword)} disabled={loading}>
+                  <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
                 </button>
-
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
-              <div className="border border-error/30 bg-error/10 rounded p-sm">
-                <p className="text-error text-sm">
-                  {error}
-                </p>
-              </div>
+              <div className="auth-error"><p>{error}</p></div>
             )}
 
-            {/* Submit Button */}
-            <button
-              className="w-full bg-primary-container text-void font-headline-sm text-headline-sm uppercase py-sm rounded glow-hover transition-all mt-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed"
-              type="submit"
-              disabled={loading}
-            >
+            <button className="auth-submit-btn" type="submit" disabled={loading}>
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
-
           </form>
 
-          {/* Divider */}
-          <div className="mt-xl">
-
-            <div className="relative">
-
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-
-              <div className="relative flex justify-center text-sm">
-
-                <span className="px-2 bg-surface-container font-label-caps text-label-caps text-on-surface-variant">
-                  Or continue with
-                </span>
-
-              </div>
-
-            </div>
-
-            {/* Google Button */}
-            <div className="mt-md grid gap-sm">
-
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 bg-background border border-white/10 rounded py-sm font-code-md text-code-md text-on-surface hover:bg-surface-variant transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  account_circle
-                </span>
-
-                Google
-              </button>
-
-            </div>
-
-          </div>
-
-          {/* Register */}
-          <p className="mt-xl text-center font-body-md text-body-md text-on-surface-variant">
-
-            New to the force?{' '}
-
-            <Link
-              className="text-primary-container hover:underline font-bold"
-              to="/register"
-            >
-              Create Account
-            </Link>
-
+          <p className="auth-footer-text">
+            New to CodeCrime?{' '}
+            <Link to="/register">Create Account</Link>
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }
