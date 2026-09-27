@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../config/supabase";
+import { API_BASE } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -11,7 +12,7 @@ export function AuthProvider({ children }) {
   // Fetch profile data from backend
   const fetchProfile = async (session) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
+      const res = await fetch(`${API_BASE}/auth/me`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -71,7 +72,7 @@ export function AuthProvider({ children }) {
   // Register
   const register = async (name, email, password) => {
     // First register via backend to create profile
-    const res = await fetch("http://localhost:5000/api/auth/register", {
+    const res = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),

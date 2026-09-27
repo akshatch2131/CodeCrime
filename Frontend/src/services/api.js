@@ -1,4 +1,8 @@
-const API_BASE = import.meta.env.VITE_API_URL;
+const configuredApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000")
+  .replace(/\/+$/, "");
+export const API_BASE = configuredApiUrl.endsWith("/api")
+  ? configuredApiUrl
+  : `${configuredApiUrl}/api`;
 
 /**
  * Make an authenticated API request.
