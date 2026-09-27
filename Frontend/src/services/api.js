@@ -1,4 +1,4 @@
-const API_BASE = "https://codecrime-o8om.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 /**
  * Make an authenticated API request.
