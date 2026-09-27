@@ -65,20 +65,28 @@ export const getProblemById = async (req, res) => {
 
     const { data, error } = await supabase
       .from("problems")
+      // Select the existing row shape so deployments that have not applied the
+      // optional debugging metadata migration can still open problem details.
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error) {
+    if (error?.code === "PGRST116") {
       console.error("Supabase error:", error);
       return res.status(404).json({
         success: false,
         error: "Problem not found",
       });
     }
+    if (error) {
+      console.error("Supabase problem lookup failed:", error);
+      return res.status(500).json({ success: false, error: "Unable to load problem" });
+    }
 
+    const publicProblem = { ...data };
+    delete publicProblem.solution_code;
     const problem = {
-      ...data,
+      ...publicProblem,
       description: data.problem_statement || data.description || "",
     };
 

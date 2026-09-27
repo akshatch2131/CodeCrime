@@ -235,6 +235,13 @@ async function seed() {
   console.log("Seeding problems to Supabase...\n");
 
   for (const problem of problems) {
+    if (!problem.function_name || !Array.isArray(problem.test_cases)) {
+      throw new Error(`Problem #${problem.problem_number} is missing its function name or test cases`);
+    }
+    if (problem.test_cases.some((testCase) => !testCase || !Object.hasOwn(testCase, "input") || !Object.hasOwn(testCase, "expectedOutput"))) {
+      throw new Error(`Problem #${problem.problem_number} has a malformed test case`);
+    }
+
     // Check if problem already exists
     const { data: existing } = await supabase
       .from("problems")

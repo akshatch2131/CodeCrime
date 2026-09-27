@@ -1,65 +1,74 @@
 import vm from "node:vm";
+import { isDeepStrictEqual } from "node:util";
 
-/**
- * Safely execute user JavaScript code against predefined test cases.
- * Uses Node.js vm module with timeout for basic sandboxing.
- *
- * @param {string} userCode - The user's submitted JavaScript code
- * @param {Array} testCases - Array of { input, expectedOutput }
- * @param {string} functionName - The name of the function to test
- * @returns {Object} { results: [...], passed: number, total: number }
- */
-export const runTestCases = (userCode, testCases, functionName) => {
+const isValidFunctionName = (name) =>
+  typeof name === "string" && /^[A-Za-z_$][\w$]*$/.test(name);
+
+/** Execute user JavaScript independently for each public test case. */
+export const runTestCases = (userCode, testCases, functionName = "solution") => {
+  const cases = Array.isArray(testCases) ? testCases : [];
   const results = [];
   let passed = 0;
-  const total = testCases.length;
 
-  for (const testCase of testCases) {
+  for (const testCase of cases) {
+    const input = testCase?.input;
+    const expectedOutput = testCase?.expectedOutput ?? testCase?.expected;
     try {
-      // Create a sandbox context
-      const sandbox = {
-        console: { log: () => {} },
-        result: undefined,
-      };
-
-      // Build the execution script:
-      // 1. Define the user's function
-      // 2. Call it with the test input
-      // 3. Store the result
-      const inputStr = JSON.stringify(testCase.input);
-      const script = new vm.Script(
-        `${userCode}\nresult = ${functionName}(${inputStr});`
-      );
-
-      // Create context and run with timeout
-      const context = vm.createContext(sandbox);
-      script.runInContext(context, { timeout: 3000 });
-
-      const actualOutput = sandbox.result;
-      const expectedOutput = testCase.expectedOutput;
-
-      // Deep comparison
-      const isEqual = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput);
-
-      if (isEqual) {
-        passed++;
+      if (typeof userCode !== "string" || !userCode.trim()) {
+        throw new TypeError("Code is empty");
+      }
+      if (!isValidFunctionName(functionName)) {
+        throw new TypeError("Invalid configured function name");
       }
 
+      const sandbox = { console: { log() {}, error() {}, warn() {} } };
+      const context = vm.createContext(sandbox);
+      const source = `${userCode}\n;typeof ${functionName} === "function"`;
+      new vm.Script(source).runInContext(context, { timeout: 3000 });
+
+      if (vm.runInContext(`typeof ${functionName}`, context, { timeout: 3000 }) !== "function") {
+        throw new ReferenceError(`${functionName} is not defined`);
+      }
+
+      const arity = vm.runInContext(`${functionName}.length`, context, { timeout: 3000 });
+      // One-argument problems use input as that argument (including arrays);
+      // multi-argument problems use input as the positional argument list.
+      const args = Array.isArray(input)
+        ? arity > 1
+          ? input
+          : [input.length === 1 ? input[0] : input]
+        : [input];
+      sandbox.__testArgs = JSON.parse(JSON.stringify(args));
+      const rawOutput = vm.runInContext(
+        `${functionName}(...__testArgs)`,
+        context,
+        { timeout: 3000 },
+      );
+      const serializedOutput = JSON.stringify(rawOutput);
+      const actualOutput = serializedOutput === undefined
+        ? undefined
+        : JSON.parse(serializedOutput);
+      const isEqual = isDeepStrictEqual(actualOutput, expectedOutput);
+      if (isEqual) passed++;
+
       results.push({
-        input: testCase.input,
+        input,
         expectedOutput,
         actualOutput,
         status: isEqual ? "passed" : "failed",
+        passed: isEqual,
       });
     } catch (error) {
       results.push({
-        input: testCase.input,
-        expectedOutput: testCase.expectedOutput,
-        actualOutput: error.message,
+        input,
+        expectedOutput,
+        actualOutput: `${error.name}: ${error.message}`,
         status: "error",
+        passed: false,
+        error: `${error.name}: ${error.message}`,
       });
     }
   }
 
-  return { results, passed, total };
+  return { results, passed, total: cases.length };
 };

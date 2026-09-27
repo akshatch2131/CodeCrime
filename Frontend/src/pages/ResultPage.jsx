@@ -56,7 +56,7 @@ export default function ResultPage() {
     );
   }
 
-  const isPassed = submission.status === 'PASSED';
+  const isPassed = submission.status?.toLowerCase() === 'passed';
   const problem = submission.problems;
 
   return (

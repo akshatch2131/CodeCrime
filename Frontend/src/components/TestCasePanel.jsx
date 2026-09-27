@@ -12,6 +12,8 @@ export default function TestCasePanel({
 
   const activeTestCase = testCases[selectedCaseIdx];
   const activeResult = executionResults?.[selectedCaseIdx];
+  const passedCount = executionResults?.filter((result) => result.status === 'passed' || result.passed).length;
+  const failedCount = executionResults ? executionResults.length - passedCount : 0;
 
   const formatVal = (v) => {
     if (v === undefined) return '';
@@ -32,6 +34,11 @@ export default function TestCasePanel({
             </span>
             Test Cases ({testCases.length})
           </button>
+          {executionResults && (
+            <span className="tcp-tab" aria-live="polite">
+              Passed: {passedCount} · Failed: {failedCount}
+            </span>
+          )}
           <button
             type="button"
             className={`tcp-tab ${activeTab === 'output' ? 'active' : ''}`}
@@ -63,7 +70,7 @@ export default function TestCasePanel({
                 const res = executionResults?.[idx];
                 let statusClass = '';
                 if (res) {
-                  statusClass = res.passed ? 'passed' : 'failed';
+                  statusClass = res.status === 'passed' || res.passed ? 'passed' : 'failed';
                 }
 
                 return (
@@ -75,7 +82,7 @@ export default function TestCasePanel({
                   >
                     {res ? (
                       <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                        {res.passed ? 'check_circle' : 'cancel'}
+                        {res.status === 'passed' || res.passed ? 'check_circle' : 'cancel'}
                       </span>
                     ) : null}
                     Case {idx + 1}
@@ -97,7 +104,7 @@ export default function TestCasePanel({
                 <div className="case-io-block">
                   <span className="case-io-label">Expected Output</span>
                   <div className="case-io-box">
-                    {formatVal(activeTestCase.expected)}
+                    {formatVal(activeTestCase.expectedOutput ?? activeTestCase.expected)}
                   </div>
                 </div>
 
@@ -106,24 +113,24 @@ export default function TestCasePanel({
                     <span
                       className="case-io-label"
                       style={{
-                        color: activeResult.passed
+                        color: activeResult.status === 'passed' || activeResult.passed
                           ? 'var(--color-tertiary)'
                           : 'var(--color-error)',
                       }}
                     >
-                      Your Output ({activeResult.passed ? 'PASSED' : 'FAILED'})
+                      Your Output ({activeResult.status === 'error' ? 'ERROR' : (activeResult.status === 'passed' || activeResult.passed) ? 'PASSED' : 'FAILED'})
                     </span>
                     <div
                       className="case-io-box"
                       style={{
-                        borderColor: activeResult.passed
+                        borderColor: activeResult.status === 'passed' || activeResult.passed
                           ? 'rgba(102, 250, 140, 0.4)'
                           : 'rgba(255, 180, 171, 0.4)',
                       }}
                     >
-                      {activeResult.error
-                        ? activeResult.error
-                        : formatVal(activeResult.actual)}
+                      {activeResult.actualOutput !== undefined
+                        ? formatVal(activeResult.actualOutput)
+                        : activeResult.error || formatVal(activeResult.actual)}
                     </div>
                   </div>
                 )}

@@ -63,7 +63,7 @@ export default function DebuggingWorkspacePage() {
       setTerminalOutput('Running test cases...');
       const res = await runCode(
         {
-          problemId: id,
+          problem_id: problem.id,
           code,
         },
         getToken
@@ -71,8 +71,8 @@ export default function DebuggingWorkspacePage() {
 
       if (res) {
         setExecutionResults(res.results || []);
-        const passedCount = res.results?.filter((r) => r.passed).length || 0;
-        const totalCount = res.results?.length || 0;
+        const passedCount = res.passed ?? res.results?.filter((r) => r.status === 'passed').length ?? 0;
+        const totalCount = res.total ?? res.results?.length ?? 0;
         setTerminalOutput(
           `Execution Finished.\nResult: ${passedCount}/${totalCount} test cases passed.\n` +
             (res.output ? `\nConsole output:\n${res.output}` : '')
@@ -93,7 +93,7 @@ export default function DebuggingWorkspacePage() {
       setTerminalOutput('Evaluating solution against test suite...');
       const res = await submitSolution(
         {
-          problemId: id,
+          problem_id: problem.id,
           code,
         },
         getToken

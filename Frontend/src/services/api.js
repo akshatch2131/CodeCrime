@@ -43,13 +43,13 @@ export const getProblemById = (id) =>
 export const submitSolution = (body, getToken) =>
   apiRequest("/submissions", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, problem_id: body.problem_id || body.problemId }),
   }, getToken);
 
 export const runCode = (body, getToken) =>
   apiRequest("/submissions/run", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, problem_id: body.problem_id || body.problemId }),
   }, getToken);
 
 export const getMySubmissions = (getToken) =>

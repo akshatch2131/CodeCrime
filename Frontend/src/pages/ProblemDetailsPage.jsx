@@ -140,7 +140,9 @@ export default function ProblemDetailsPage() {
                   <div className="example-row">
                     <span className="example-label">Expected Output</span>
                     <span className="example-val">
-                      {typeof tc.expected === 'object' ? JSON.stringify(tc.expected) : String(tc.expected)}
+                      {typeof (tc.expectedOutput ?? tc.expected) === 'object'
+                        ? JSON.stringify(tc.expectedOutput ?? tc.expected)
+                        : String(tc.expectedOutput ?? tc.expected)}
                     </span>
                   </div>
                 </div>
