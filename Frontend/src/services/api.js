@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://codecrime-o8om.onrender.com";
 
 /**
  * Make an authenticated API request.
