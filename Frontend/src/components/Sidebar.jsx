@@ -15,7 +15,12 @@ const footerItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { profile, logout } = useAuth();
+  const { profile, user, logout } = useAuth();
+  const displayName = profile?.username
+    || user?.user_metadata?.name
+    || profile?.name
+    || user?.email
+    || 'User';
 
   const handleLogout = async () => {
     await logout();
@@ -36,7 +41,7 @@ export default function Sidebar() {
         </div>
         <div className="sidebar-profile-info">
           <span className="sidebar-profile-name">
-            {profile?.name || 'Developer'}
+            {displayName}
           </span>
           <span className="sidebar-profile-rank">
             {profile?.level || 'Rookie'} • {profile?.xp || 0} XP

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { supabase } from "../config/supabase";
 import { API_BASE } from "../services/api";
 
@@ -8,28 +8,59 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const activeUserId = useRef(null);
+
+  const profileFallback = (authUser) => {
+    const name = authUser?.user_metadata?.name?.trim() || authUser?.email || "User";
+    return {
+      id: authUser?.id,
+      email: authUser?.email,
+      username: name,
+      name,
+    };
+  };
 
   // Fetch profile data from backend
   const fetchProfile = async (session) => {
+    const authUser = session?.user;
+    if (!authUser?.id) return;
+
     try {
       const res = await fetch(`${API_BASE}/auth/me`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+      if (!res.ok) throw new Error(`Profile request failed (${res.status})`);
       const data = await res.json();
-      if (data.success) {
-        setProfile(data.user);
+
+      // Ignore late responses after logout or an account switch.
+      if (activeUserId.current !== authUser.id) return;
+
+      if (data.success && data.user?.id === authUser.id) {
+        const name = data.user.username?.trim()
+          || authUser.user_metadata?.name?.trim()
+          || data.user.name?.trim()
+          || authUser.email
+          || "User";
+        setProfile({ ...data.user, username: name, name });
+      } else {
+        setProfile(profileFallback(authUser));
       }
     } catch (err) {
       console.error("Profile fetch error:", err);
+      if (activeUserId.current === authUser.id) {
+        setProfile(profileFallback(authUser));
+      }
     }
   };
 
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      activeUserId.current = session?.user?.id ?? null;
       setUser(session?.user ?? null);
+      setProfile(null);
       if (session) {
         fetchProfile(session);
       }
@@ -40,11 +71,11 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      activeUserId.current = session?.user?.id ?? null;
       setUser(session?.user ?? null);
+      setProfile(null);
       if (session) {
         fetchProfile(session);
-      } else {
-        setProfile(null);
       }
     });
 
@@ -95,6 +126,7 @@ export function AuthProvider({ children }) {
   // Logout
   const logout = async () => {
     await supabase.auth.signOut();
+    activeUserId.current = null;
     setUser(null);
     setProfile(null);
   };

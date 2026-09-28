@@ -5,7 +5,7 @@ import { getProblems, getMySubmissions } from '../services/api';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-  const { profile, getToken } = useAuth();
+  const { profile, user, getToken } = useAuth();
   const [problems, setProblems] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,11 @@ export default function DashboardPage() {
   const solvedCount = profile?.problems_solved || 0;
   const currentXp = profile?.xp || 0;
   const currentLevel = profile?.level || 'Rookie';
+  const displayName = profile?.username
+    || user?.user_metadata?.name
+    || profile?.name
+    || user?.email
+    || 'User';
 
   // Recommend the first unsolved problem or the first problem
   const recommendedProblem =
@@ -48,7 +53,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1>Welcome back, {profile?.name || 'Developer'}</h1>
+          <h1>Welcome back, {displayName}</h1>
           <p>Ready to inspect some code and track down bugs?</p>
         </div>
         <div className="dashboard-header-actions">
