@@ -2,10 +2,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { default: app } = await import("./app.js");
+const {default:app}=await import("./app.js");
 
-const PORT = process.env.PORT || 5000;
+const PORT=process.env.PORT||5000;
 
-app.listen(PORT, () => {
+app.listen(PORT,()=>{
   console.log(`CodeCrime Backend running on port ${PORT}`);
 });

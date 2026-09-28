@@ -1,29 +1,29 @@
 import vm from "node:vm";
-import { isDeepStrictEqual } from "node:util";
+import {isDeepStrictEqual} from "node:util";
 
-const isValidFunctionName = (name) =>
-  typeof name === "string" && /^[A-Za-z_$][\w$]*$/.test(name);
+const isValidFunctionName=(name)=>
+  typeof name==="string" && /^[A-Za-z_$][\w$]*$/.test(name);
 
 /** Execute user JavaScript independently for each public test case. */
-export const runTestCases = (userCode, testCases, functionName = "solution") => {
-  const cases = Array.isArray(testCases) ? testCases : [];
-  const results = [];
-  let passed = 0;
+export const runTestCases=(userCode,testCases,functionName="solution")=>{
+  const cases=Array.isArray(testCases)?testCases:[];
+  const results=[];
+  let passed=0;
 
-  for (const testCase of cases) {
+  for(const testCase of cases){
     const input = testCase?.input;
-    const expectedOutput = testCase?.expectedOutput ?? testCase?.expected;
-    try {
-      if (typeof userCode !== "string" || !userCode.trim()) {
+    const expectedOutput=testCase?.expectedOutput??testCase?.expected;
+    try{
+      if(typeof userCode!=="string"||!userCode.trim()){
         throw new TypeError("Code is empty");
       }
       if (!isValidFunctionName(functionName)) {
         throw new TypeError("Invalid configured function name");
       }
 
-      const sandbox = { console: { log() {}, error() {}, warn() {} } };
-      const context = vm.createContext(sandbox);
-      const source = `${userCode}\n;typeof ${functionName} === "function"`;
+      const sandbox={ console: { log() {}, error() {}, warn() {} } };
+      const context=vm.createContext(sandbox);
+      const source=`${userCode}\n;typeof ${functionName} ==="function"`;
       new vm.Script(source).runInContext(context, { timeout: 3000 });
 
       if (vm.runInContext(`typeof ${functionName}`, context, { timeout: 3000 }) !== "function") {

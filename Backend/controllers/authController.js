@@ -1,18 +1,17 @@
 import supabase from "../config/supabase.js";
-
 // Register a new user
-export const register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+export const register=async(req,res)=>{
+  try{
+    const{name,email,password}=req.body;
 
-    if (!name || !email || !password) {
+    if(!name||!email||!password){
       return res.status(400).json({
         success: false,
         error: "Name, email and password are required",
       });
     }
 
-    if (password.length < 6) {
+    if (password.length<6) {
       return res.status(400).json({
         success: false,
         error: "Password must be at least 6 characters",
@@ -20,15 +19,15 @@ export const register = async (req, res) => {
     }
 
     // Create user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const {data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name },
+        data: {name},
       },
     });
 
-    if (authError) {
+    if (authError){
       return res.status(400).json({
         success: false,
         error: authError.message,
@@ -36,7 +35,7 @@ export const register = async (req, res) => {
     }
 
     // Create profile in profiles table
-    const { error: profileError } = await supabase.from("profiles").insert([
+    const {error: profileError}=await supabase.from("profiles").insert([
       {
         id: authData.user.id,
         name,
@@ -48,7 +47,7 @@ export const register = async (req, res) => {
       },
     ]);
 
-    if (profileError) {
+    if (profileError){
       console.error("Profile creation error:", profileError);
       // Don't fail the registration if profile creation fails
       // It can be created later
@@ -56,14 +55,14 @@ export const register = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      user: {
+      user:{
         id: authData.user.id,
         email: authData.user.email,
         name,
       },
       session: authData.session,
     });
-  } catch (error) {
+  } catch(error){
     console.error("Register error:", error);
     return res.status(500).json({
       success: false,
@@ -73,23 +72,23 @@ export const register = async (req, res) => {
 };
 
 // Login user
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+export const login=async(req,res)=>{
+  try{
+    const {email,password}=req.body;
 
-    if (!email || !password) {
+    if(!email||!password){
       return res.status(400).json({
         success: false,
         error: "Email and password are required",
       });
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const {data,error}=await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if(error){
       return res.status(401).json({
         success: false,
         error: error.message,
@@ -105,8 +104,8 @@ export const login = async (req, res) => {
       },
       session: data.session,
     });
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch(error){
+    console.error("Login error:",error);
     return res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -115,25 +114,25 @@ export const login = async (req, res) => {
 };
 
 // Get current user profile
-export const getMe = async (req, res) => {
+export const getMe=async(req, res)=>{
   try {
-    const userId = req.user.id;
+    const userId=req.user.id;
 
     // Fetch profile from profiles table
-    const { data: profile, error } = await supabase
+    const {data:profile,error}=await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
 
-    if (error || !profile) {
+    if(error||!profile){
       // Return basic info from auth if profile doesn't exist
       return res.json({
         success: true,
-        user: {
+        user:{
           id: req.user.id,
           email: req.user.email,
-          name: req.user.user_metadata?.name || "",
+          name: req.user.user_metadata?.name||"",
           xp: 0,
           problems_solved: 0,
           streak: 0,
@@ -146,7 +145,7 @@ export const getMe = async (req, res) => {
       success: true,
       user: profile,
     });
-  } catch (error) {
+  } catch(error){
     console.error("GetMe error:", error);
     return res.status(500).json({
       success: false,

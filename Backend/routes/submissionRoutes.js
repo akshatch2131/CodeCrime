@@ -1,5 +1,5 @@
 import express from "express";
-import {
+import{
   submitSolution,
   runCode,
   getMySubmissions,
@@ -7,11 +7,11 @@ import {
 } from "../controllers/submissionController.js";
 import authMiddleware from "../middleware/auth.js";
 
-const router = express.Router();
+const router=express.Router();
 
-router.post("/", authMiddleware, submitSolution);
-router.post("/run", authMiddleware, runCode);
-router.get("/my", authMiddleware, getMySubmissions);
-router.get("/:id", authMiddleware, getSubmissionById);
+router.post("/",authMiddleware,submitSolution);
+router.post("/run",authMiddleware,runCode);
+router.get("/my",authMiddleware,getMySubmissions);
+router.get("/:id",authMiddleware,getSubmissionById);
 
 export default router;
