@@ -5,7 +5,7 @@ export const getLeaderboard = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, name, xp, problems_solved, level")
+      .select("id, username, full_name, xp, rank, cases_solved")
       .order("xp", { ascending: false })
       .limit(50);
 
@@ -17,9 +17,13 @@ export const getLeaderboard = async (req, res) => {
     }
 
     // Add rank
-    const leaderboard = (data || []).map((user, index) => ({
+    const leaderboard = (data || []).map((profile, index) => ({
+      id: profile.id,
+      username: profile.username || profile.full_name || null,
+      xp: profile.xp ?? 0,
       rank: index + 1,
-      ...user,
+      level: profile.rank || null,
+      cases_solved: profile.cases_solved ?? 0,
     }));
 
     return res.json({

@@ -4,7 +4,7 @@ import { getLeaderboard } from '../services/api';
 import './LeaderboardPage.css';
 
 export default function LeaderboardPage() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +28,11 @@ export default function LeaderboardPage() {
     loadLeaderboard();
   }, []);
 
-  const top3 = [leaders[1], leaders[0], leaders[2]].filter(Boolean);
+  const getUsername = (entry) => entry.username
+    || (entry.id === profile?.id
+      ? profile?.username || profile?.name || user?.user_metadata?.name
+      : null)
+    || 'Username unavailable';
 
   return (
     <div className="leaderboard-page">
@@ -53,11 +57,11 @@ export default function LeaderboardPage() {
               {/* 2nd place */}
               {leaders[1] && (
                 <div className="podium-card second">
-                  <div className="podium-rank-badge">2</div>
+                  <div className="podium-rank-badge">{leaders[1].rank || 2}</div>
                   <div className="podium-avatar">
                     <span className="material-symbols-outlined">person</span>
                   </div>
-                  <span className="podium-name">{leaders[1].name}</span>
+                  <span className="podium-name">{getUsername(leaders[1])}</span>
                   <span className="badge-category">{leaders[1].level || 'Rookie'}</span>
                   <span className="podium-xp">{leaders[1].xp} XP</span>
                 </div>
@@ -66,11 +70,11 @@ export default function LeaderboardPage() {
               {/* 1st place */}
               {leaders[0] && (
                 <div className="podium-card first">
-                  <div className="podium-rank-badge">1</div>
+                  <div className="podium-rank-badge">{leaders[0].rank || 1}</div>
                   <div className="podium-avatar">
                     <span className="material-symbols-outlined">workspace_premium</span>
                   </div>
-                  <span className="podium-name">{leaders[0].name}</span>
+                  <span className="podium-name">{getUsername(leaders[0])}</span>
                   <span className="badge-category">{leaders[0].level || 'Master'}</span>
                   <span className="podium-xp">{leaders[0].xp} XP</span>
                 </div>
@@ -79,11 +83,11 @@ export default function LeaderboardPage() {
               {/* 3rd place */}
               {leaders[2] && (
                 <div className="podium-card third">
-                  <div className="podium-rank-badge">3</div>
+                  <div className="podium-rank-badge">{leaders[2].rank || 3}</div>
                   <div className="podium-avatar">
                     <span className="material-symbols-outlined">person</span>
                   </div>
-                  <span className="podium-name">{leaders[2].name}</span>
+                  <span className="podium-name">{getUsername(leaders[2])}</span>
                   <span className="badge-category">{leaders[2].level || 'Rookie'}</span>
                   <span className="podium-xp">{leaders[2].xp} XP</span>
                 </div>
@@ -108,7 +112,7 @@ export default function LeaderboardPage() {
                   const isCurrent = profile?.id && u.id === profile.id;
                   return (
                     <tr key={u.id || idx} className={isCurrent ? 'current-user' : ''}>
-                      <td className="leaderboard-rank">#{idx + 1}</td>
+                      <td className="leaderboard-rank">#{u.rank || idx + 1}</td>
                       <td>
                         <div className="leaderboard-user-cell">
                           <div className="leaderboard-table-avatar">
@@ -117,7 +121,7 @@ export default function LeaderboardPage() {
                             </span>
                           </div>
                           <div>
-                            <span style={{ fontWeight: 600 }}>{u.name}</span>
+                            <span style={{ fontWeight: 600 }}>{getUsername(u)}</span>
                             {isCurrent && (
                               <span
                                 style={{
@@ -135,7 +139,7 @@ export default function LeaderboardPage() {
                       <td>
                         <span className="badge-category">{u.level || 'Rookie'}</span>
                       </td>
-                      <td>{u.problems_solved || 0}</td>
+                      <td>{u.cases_solved ?? 0}</td>
                       <td style={{ textAlign: 'right', fontFamily: 'var(--font-code)', fontWeight: 700, color: 'var(--color-primary-container)' }}>
                         {u.xp} XP
                       </td>
